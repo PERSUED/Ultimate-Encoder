@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ultimate Encoder/Decoder</title>
+  <style>
+    :root {
+      --bg-color-light: #f5f5f5;
+      --text-color-light: #333;
+      --container-bg-light: #fff;
+      --button-bg-light: #3498db;
+      --button-hover-light: #2980b9;
+      --textarea-bg-light: #fff;
+      --textarea-text-light: #333;
+
+      --bg-color-dark: #121212;
+      --text-color-dark: #88cc88;
+      --container-bg-dark: #1e1e1e;
+      --button-bg-dark: #88cc88;
+      --button-hover-dark: #aaffaa;
+      --textarea-bg-dark: #222;
+      --textarea-text-dark: #88cc88;
+    }
+
+    body {
+      background-color: var(--bg-color-dark);
+      color: var(--text-color-dark);
+      font-family: monospace;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    body.light-theme {
+      background-color: var(--bg-color-light);
+      color: var(--text-color-light);
+    }
+
+    .container {
+      background-color: var(--container-bg-dark);
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+      transition: background-color 0.3s;
+      position: relative;
+    }
+
+    body.light-theme .container {
+      background-color: var(--container-bg-light);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      color: #aaffaa;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .control-panel {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-bottom: 20px;
+      align-items: center;
+    }
+
+    select,
+    input[type="number"],
+    button {
+      background: var(--button-bg-dark);
+      border: none;
+      color: #121212;
+      font-family: monospace;
+      font-size: 16px;
+      padding: 10px 15px;
+      border-radius: 5px;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    body.light-theme select,
+    body.light-theme input[type="number"],
+    body.light-theme button {
+      background: var(--button-bg-light);
+      color: white;
+    }
+
+    button:hover {
+      background: var(--button-hover-dark);
+      color: #121212;
+    }
+
+    body.light-theme button:hover {
+      background: var(--button-hover-light);
+      color: white;
+    }
+
+    textarea {
+      width: 100%;
+      margin: 10px 0;
+      padding: 12px;
+      background: var(--textarea-bg-dark);
+      color: var(--textarea-text-dark);
+      border: none;
+      border-radius: 5px;
+      font-family: monospace;
+      font-size: 14px;
+      transition: background-color 0.3s, color 0.3s;
+      resize: vertical;
+    }
+
+    body.light-theme textarea {
+      background: var(--textarea-bg-light);
+      color: var(--textarea-text-light);
+    }
+
+    label {
+      margin-top: 1em;
+      display: block;
+    }
+
+    .radio-group {
+      margin: 15px 0;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .radio-group label {
+      color: var(--text-color-dark);
+      user-select: none;
+    }
+
+    body.light-theme .radio-group label {
+      color: var(--text-color-light);
+    }
+
+    .error {
+      color: #e74c3c;
+      font-weight: bold;
+    }
+
+    .success {
+      color: #2ecc71;
+    }
+
+    /* Toggle button positioning */
+    #toggleThemeBtn {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      padding: 6px 12px;
+      font-size: 14px;
+      user-select: none;
+    }
+
+    /* Unicode Stego controls styling */
+    #unicodeStego-encode-controls {
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    #unicodeStego-encode-controls textarea {
+      min-height: 60px;
+    }
+
+    /* Hide decode inputs by default, show only for decode */
+    #decodeInput,
+    #unicodeStego-decode-input {
+      display: none;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <button id="toggleThemeBtn">Switch to Light Mode</button>
+
+    <h1>🔐 Ultimate Encoder/Decoder</h1>
+
+    <div class="control-panel">
+      <select id="method">
+        <option value="ascii">ASCII Codes</option>
+        <option value="binary">Binary</option>
+        <option value="caesar">Caesar Cipher</option>
+        <option value="unicode">Unicode (U+...)</option>
+        <option value="hex">Hexadecimal</option>
+        <option value="base64">Base64</option>
+        <option value="unicodeStego">Unicode Stego</option>
+      </select>
+
+      <div id="caesar-controls" style="display:none;">
+        <label>Shift: <input type="number" id="shift" value="3" min="1" max="25"></label>
+      </div>
+    </div>
+
+    <!-- Encode inputs -->
+    <textarea id="input" placeholder="Enter your text here..."></textarea>
+
+    <div id="unicodeStego-encode-controls">
+      <textarea id="hiddenMessage" placeholder="Hidden message (for encoding)..."></textarea>
+      <textarea id="carrierSentence" placeholder="Carrier sentence (visible)..."></textarea>
+    </div>
+
+    <!-- Decode inputs -->
+    <textarea id="decodeInput" placeholder="Paste encoded text here to decode..."></textarea>
+
+    <div id="unicodeStego-decode-input">
+      <textarea id="unicodeStegoDecodeInput" placeholder="Paste Unicode Stego encoded sentence here to decode..."></textarea>
+    </div>
+
+    <textarea id="output" readonly placeholder="Result will appear here..."></textarea>
+
+    <div class="control-panel" style="justify-content: flex-start; gap: 10px;">
+      <div class="radio-group">
+        <label><input type="radio" name="operation" value="encode" checked> Encode</label>
+        <label><input type="radio" name="operation" value="decode"> Decode</label>
+      </div>
+      <button id="processButton">Process</button>
+      <button id="copyButton">Copy Output</button>
+    </div>
+
+    <p id="status"></p>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const methodSelect = document.getElementById('method');
+      const caesarControls = document.getElementById('caesar-controls');
+      const unicodeStegoEncodeControls = document.getElementById('unicodeStego-encode-controls');
+      const unicodeStegoDecodeInputDiv = document.getElementById('unicodeStego-decode-input');
+      const processButton = document.getElementById('processButton');
+      const inputTextarea = document.getElementById('input');
+      const decodeTextarea = document.getElementById('decodeInput');
+      const unicodeStegoDecodeTextarea = document.getElementById('unicodeStegoDecodeInput');
+      const outputTextarea = document.getElementById('output');
+      const statusElement = document.getElementById('status');
+      const copyButton = document.getElementById('copyButton');
+      const toggleThemeBtn = document.getElementById('toggleThemeBtn');
+
+      // Unicode Stego invisible chars
+      const zeroChar = '\u200B'; // zero-width space for 0
+      const oneChar = '\u200C'; // zero-width non-joiner for 1
+
+      // Update UI based on method and operation
+      function updateUI() {
+        const method = methodSelect.value;
+        const operation = document.querySelector('input[name="operation"]:checked').value;
+
+        caesarControls.style.display = method === 'caesar' && operation === 'encode' || operation === 'decode' ? 'block' : 'none';
+
+        // Show Unicode Stego encode controls only on encode + method match
+        unicodeStegoEncodeControls.style.display = method === 'unicodeStego' && operation === 'encode' ? 'flex' : 'none';
+
+        // Show Unicode Stego decode input only on decode + method match
+        unicodeStegoDecodeInputDiv.style.display = method === 'unicodeStego' && operation === 'decode' ? 'block' : 'none';
+
+        // Show main encode input only if not unicodeStego encode mode
+        inputTextarea.style.display = !(method === 'unicodeStego' && operation === 'encode') ? 'block' : 'none';
+
+        // Show decode input textarea only on decode and not unicodeStego
+        decodeTextarea.style.display = (operation === 'decode' && method !== 'unicodeStego') ? 'block' : 'none';
+      }
+
+      methodSelect.addEventListener('change', updateUI);
+      document.querySelectorAll('input[name="operation"]').forEach(radio => {
+        radio.addEventListener('change', updateUI);
+      });
+
+      // Encoding/decoding functions
+      function textToAscii(text) {
+        return text.split('').map(c => c.charCodeAt(0)).join(' ');
+      }
+
+      function asciiToText(ascii) {
+        if (!ascii.trim()) return '';
+        return ascii.split(' ').map(code => {
+          const num = parseInt(code);
+          if (isNaN(num)) throw new Error('Invalid ASCII code');
+          return String.fromCharCode(num);
+        }).join('');
+      }
+
+      function textToBinary(text) {
+        return text.split('').map(c =>
+          c.charCodeAt(0).toString(2).padStart(8, '0')).join(' ');
+      }
+
+      function binaryToText(binary) {
+        if (!binary.trim()) return '';
+        return binary.split(' ').map(bin => {
+          if (!/^[01]+$/.test(bin)) throw new Error('Invalid binary input');
+          return String.fromCharCode(parseInt(bin, 2));
+        }).join('');
+      }
+
+      function caesarCipher(text, shift) {
+        return text.split('').map(c => {
+          if (/[a-z]/.test(c)) {
+            let code = ((c.charCodeAt(0) - 97 + shift) % 26);
+            if (code < 0) code += 26;
+            return String.fromCharCode(code + 97);
+          }
+          if (/[A-Z]/.test(c)) {
+            let code = ((c.charCodeAt(0) - 65 + shift) % 26);
+            if (code < 0) code += 26;
+            return String.fromCharCode(code + 65);
+          }
+          return c;
+        }).join('');
+      }
+
+      function textToUnicode(text) {
+        return text.split('').map(c =>
+          'U+' + c.charCodeAt(0).toString(16).toUpperCase().padStart(4, '0')).join(' ');
+      }
+
+      function unicodeToText(unicode) {
+        if (!unicode.trim()) return '';
+        return unicode.split(' ').map(u => {
+          const hex = u.replace('U+', '');
+          if (!/^[0-9a-fA-F]+$/.test(hex)) throw new Error('Invalid Unicode format');
+          return String.fromCharCode(parseInt(hex, 16));
+        }).join('');
+      }
+
+      function textToHex(text) {
+        return text.split('').map(c =>
+          c.charCodeAt(0).toString(16).padStart(2, '0')).join(' ');
+      }
+
+      function hexToText(hex) {
+        if (!hex.trim()) return '';
+        return hex.split(' ').map(h => {
+          if (!/^[0-9a-fA-F]+$/.test(h)) throw new Error('Invalid hex input');
+          return String.fromCharCode(parseInt(h, 16));
+        }).join('');
+      }
+
+      // Unicode Stego encode/decode
+      function encodeUnicodeStego(message, carrier) {
+        const binary = message.split('')
+          .map(c => c.charCodeAt(0).toString(2).padStart(8, '0'))
+          .join('');
+        let encoded = '';
+        let carrierIndex = 0;
+
+        for (let bit of binary) {
+          encoded += carrierIndex < carrier.length ? carrier[carrierIndex++] : ' ';
+          encoded += bit === '0' ? zeroChar : oneChar;
+        }
+        encoded += carrier.slice(carrierIndex);
+        return encoded;
+      }
+
+      function decodeUnicodeStego(encoded) {
+        let bits = '';
+        for (let char of encoded) {
+          if (char === zeroChar) bits += '0';
+          else if (char === oneChar) bits += '1';
+        }
+        let chars = [];
+        for (let i = 0; i < bits.length; i += 8) {
+          const byte = bits.slice(i, i + 8);
+          if (byte.length === 8) {
+            chars.push(String.fromCharCode(parseInt(byte, 2)));
+          }
+        }
+        return chars.join('');
+      }
+
+      processButton.addEventListener('click', function () {
+        const method = methodSelect.value;
+        const operation = document.querySelector('input[name="operation"]:checked').value;
+
+        let output = '';
+        let status = '';
+
+        try {
+          if (operation === 'encode') {
+            if (method === 'unicodeStego') {
+              const message = document.getElementById('hiddenMessage').value;
+              const carrier = document.getElementById('carrierSentence').value;
+              if (!message || !carrier) throw new Error('Hidden message and carrier sentence are required.');
+              output = encodeUnicodeStego(message, carrier);
+            } else {
+              const input = inputTextarea.value;
+              switch (method) {
+                case 'ascii': output = textToAscii(input); break;
+                case 'binary': output = textToBinary(input); break;
+                case 'caesar':
+                  const shift = parseInt(document.getElementById('shift').value);
+                  output = caesarCipher(input, shift);
+                  break;
+                case 'unicode': output = textToUnicode(input); break;
+                case 'hex': output = textToHex(input); break;
+                case 'base64': output = btoa(input); break;
+                default: throw new Error('Unknown method');
+              }
+            }
+          } else { // decode
+            if (method === 'unicodeStego') {
+              const encoded = unicodeStegoDecodeTextarea.value.trim();
+              if (!encoded) throw new Error('Please paste the encoded sentence to decode.');
+              output = decodeUnicodeStego(encoded);
+              if (!output) output = '[No hidden message found]';
+            } else {
+              const encoded = decodeTextarea.value.trim();
+              if (!encoded) throw new Error('Please paste the encoded text to decode.');
+              switch (method) {
+                case 'ascii': output = asciiToText(encoded); break;
+                case 'binary': output = binaryToText(encoded); break;
+                case 'caesar':
+                  const shift = parseInt(document.getElementById('shift').value);
+                  output = caesarCipher(encoded, -shift);
+                  break;
+                case 'unicode': output = unicodeToText(encoded); break;
+                case 'hex': output = hexToText(encoded); break;
+                case 'base64': output = atob(encoded); break;
+                default: throw new Error('Unknown method');
+              }
+            }
+          }
+
+          statusElement.className = 'success';
+          status = `Successfully ${operation}d using ${method}!`;
+        } catch (e) {
+          statusElement.className = 'error';
+          status = `Error: ${e.message}`;
+          output = '';
+        }
+
+        outputTextarea.value = output;
+        statusElement.textContent = status;
+      });
+
+      copyButton.addEventListener('click', () => {
+        const outputText = outputTextarea.value;
+        if (!outputText) {
+          alert('Nothing to copy.');
+          return;
+        }
+        navigator.clipboard.writeText(outputText)
+          .then(() => alert('Copied to clipboard!'))
+          .catch(() => alert('Failed to copy.'));
+      });
+
+      // Light/Dark theme toggle with localStorage
+      if (localStorage.getItem('theme') === 'light') {
+        document.body.classList.add('light-theme');
+        toggleThemeBtn.textContent = 'Switch to Dark Mode';
+      }
+
+      toggleThemeBtn.addEventListener('click', () => {
+        document.body.classList.toggle('light-theme');
+        if (document.body.classList.contains('light-theme')) {
+          toggleThemeBtn.textContent = 'Switch to Dark Mode';
+          localStorage.setItem('theme', 'light');
+        } else {
+          toggleThemeBtn.textContent = 'Switch to Light Mode';
+          localStorage.setItem('theme', 'dark');
+        }
+      });
+
+      // Initial UI update
+      updateUI();
+    });
+  </script>
+</body>
+</html>
